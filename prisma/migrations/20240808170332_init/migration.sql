@@ -2,6 +2,7 @@
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(255) NOT NULL,
+    "password" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -43,15 +44,6 @@ CREATE TABLE "Task" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Board_userId_key" ON "Board"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "List_boardId_key" ON "List"("boardId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Task_listId_key" ON "Task"("listId");
 
 -- AddForeignKey
 ALTER TABLE "Board" ADD CONSTRAINT "Board_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

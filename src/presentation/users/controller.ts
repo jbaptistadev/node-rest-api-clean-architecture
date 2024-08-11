@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../data/postgres-repository';
 import { CreateUserDto } from '../../domain/dtos';
+import { UserRepository } from '../../domain';
 
 export class UsersController {
+  constructor(private readonly userRepository: UserRepository) {}
+
   public createUser = async (req: Request, res: Response) => {
     try {
       const [error, createUserDto] = CreateUserDto.create(req.body);
@@ -13,11 +16,7 @@ export class UsersController {
         });
       }
 
-      const user = await prisma.user.findUnique({
-        where: {
-          email: createUserDto!.email,
-        },
-      });
+      const user = await this.userRepository.findByEmail(createUserDto!.email);
 
       if (user) {
         return res.status(400).json({
@@ -25,12 +24,7 @@ export class UsersController {
         });
       }
 
-      const newUser = await prisma.user.create({
-        data: {
-          name: createUserDto!.name,
-          email: createUserDto!.email,
-        },
-      });
+      const newUser = await this.userRepository.createUser(createUserDto!);
 
       res.json(newUser);
     } catch (error) {
