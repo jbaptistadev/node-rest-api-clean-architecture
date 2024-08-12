@@ -14,7 +14,7 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
+  id       String  @id @default(uuid())
   name     String  @db.VarChar(255)
   password String  @db.VarChar(255)
   email    String  @unique @db.VarChar(255)
@@ -22,31 +22,31 @@ model User {
 }
 
 model Board {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   name        String   @db.VarChar(255)
   description String   @db.VarChar(255)
   tags        String[]
-  posterImage String
-  userId      Int
+  posterImage String?
+  userId      String
   user        User     @relation(fields: [userId], references: [id])
   List        List[]
 }
 
 model List {
-  id         Int    @id @default(autoincrement())
+  id         String @id @default(uuid())
   name       String @db.VarChar(255)
   background String
-  boardId    Int
+  boardId    String
   board      Board  @relation(fields: [boardId], references: [id])
   Task       Task[]
 }
 
 model Task {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   title       String   @db.VarChar(255)
   description String   @db.VarChar(255)
   tags        String[]
   image       String
-  listId      Int
+  listId      String
   list        List     @relation(fields: [listId], references: [id])
 }

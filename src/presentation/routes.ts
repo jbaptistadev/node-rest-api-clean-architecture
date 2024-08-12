@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { BoardsController } from './boards/controller';
 import { BoardRoutes } from './boards/routes';
 import { UsersRoutes } from './users/routes';
 

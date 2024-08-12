@@ -28,7 +28,6 @@ export class UsersController {
 
       res.json(newUser);
     } catch (error) {
-      console.error(error);
       res.status(400).json({
         message: 'failed to create user',
       });

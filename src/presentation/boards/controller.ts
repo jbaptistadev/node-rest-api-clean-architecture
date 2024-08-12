@@ -1,57 +1,57 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../data/postgres-repository';
+import { BoardRepository } from '../../domain';
 
 export class BoardsController {
-  public getBoards = async (req: Request, res: Response) => {
-    // TODO this should be find by user id extracted from token
+  constructor(private readonly boardRepository: BoardRepository) {}
 
-    const boards = await prisma.board.findMany();
+  public getBoards = async (_: Request, res: Response) => {
+    // TODO this should be find by user id extracted from token
+    // TODO this should get all boards of that user
+    const boards = await this.boardRepository.getAllBoards();
 
     res.json(boards);
   };
 
-  public getBoardById = async (req: Request, res: Response) => {
-    const id = +req.params.id;
+  // public getBoardById = async (req: Request, res: Response) => {
+  //   const id = req.params.id;
 
-    // TODO this should validate user id extracted from token
+  //   // TODO this should validate user id extracted from token
 
-    if (isNaN(id)) {
-      return res.status(400).json({
-        message: 'id must be a number',
-      });
-    }
+  //   if (!id) {
+  //     return res.status(400).json({
+  //       message: 'id is required',
+  //     });
+  //   }
 
-    const board = await prisma.board.findUnique({
-      where: {
-        id,
-      },
-    });
+  //   const board = await prisma.board.findUnique({
+  //     where: {
+  //       id,
+  //     },
+  //   });
 
-    if (!board) {
-      return res.status(404).json({
-        message: `board not found with id ${id}`,
-      });
-    }
+  //   if (!board) {
+  //     return res.status(404).json({
+  //       message: `board not found with id ${id}`,
+  //     });
+  //   }
 
-    res.json(board);
-  };
+  //   res.json(board);
+  // };
 
   public createBoard = async (req: Request, res: Response) => {
     try {
       // TODO this should validate user id extracted from token
       const { name, description, tags, posterImage, userId } = req.body;
 
-      if (!name || !description || !tags || !posterImage || !userId) {
+      if (!name || !description || !userId) {
         return res.status(400).json({
-          message:
-            'name, description, tags, posterImage and userId are required',
+          message: 'name, description, userId are required',
         });
       }
 
-      const board = await prisma.board.findFirst({
-        where: {
-          name,
-        },
+      const board = await this.boardRepository.findBoard({
+        name,
       });
 
       if (board) {
@@ -60,14 +60,12 @@ export class BoardsController {
         });
       }
 
-      const newBoard = await prisma.board.create({
-        data: {
-          name,
-          description,
-          tags,
-          posterImage,
-          userId: +userId,
-        },
+      const newBoard = await this.boardRepository.createBoard({
+        name,
+        description,
+        tags,
+        posterImage,
+        userId,
       });
 
       res.json(newBoard);
@@ -84,18 +82,16 @@ export class BoardsController {
     // TODO this should validate user id extracted from token
 
     try {
-      const id = +req.params.id;
+      const id = req.params.id;
 
-      if (isNaN(id)) {
+      if (!id) {
         return res.status(400).json({
-          message: 'id must be a number',
+          message: 'id is required',
         });
       }
 
-      const board = await prisma.board.findFirst({
-        where: {
-          id,
-        },
+      const board = await this.boardRepository.findBoard({
+        id,
       });
 
       if (!board) {
@@ -104,42 +100,40 @@ export class BoardsController {
         });
       }
 
+      // TODO userId should be extracted from user token
+      // TODO need to be create a board dto
       const { name, description, tags, posterImage, userId } = req.body;
-      const updatedBoard = await prisma.board.update({
-        where: {
-          id,
-        },
-        data: {
-          name,
-          description,
-          tags,
-          posterImage,
-          userId,
-        },
+
+      const updatedBoard = await this.boardRepository.updateBoard({
+        id,
+        name,
+        description,
+        tags,
+        posterImage,
+        userId,
       });
 
       res.json(updatedBoard);
     } catch (error) {
+      console.log('error', error);
       res.json({
-        message: 'Something went wrong',
+        message: 'Something went wrong when updating board',
       });
     }
   };
 
   public deleteBoard = async (req: Request, res: Response) => {
     try {
-      const id = +req.params.id;
+      const id = req.params.id;
 
-      if (isNaN(id)) {
+      if (!id) {
         return res.status(400).json({
-          message: 'id must be a number',
+          message: 'id is required',
         });
       }
 
-      const board = await prisma.board.findFirst({
-        where: {
-          id,
-        },
+      const board = await this.boardRepository.findBoard({
+        id,
       });
 
       if (!board) {
@@ -148,10 +142,12 @@ export class BoardsController {
         });
       }
       // TODO, in production, this should be a soft delete
-      await prisma.board.delete({
-        where: {
-          id,
-        },
+      const isDeleted = await this.boardRepository.deleteBoard(id);
+
+      // TODO need to improve error message
+      res.json({
+        message: isDeleted ? 'Board deleted successfully' : 'Board not found',
+        success: isDeleted,
       });
     } catch (error) {
       res.json({
